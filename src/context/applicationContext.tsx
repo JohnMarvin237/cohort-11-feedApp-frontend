@@ -1,4 +1,4 @@
-import React, { createContext, useState , type JSX } from "react";
+import { createContext, useState , type JSX } from "react";
 import { useCookies } from "react-cookie";
 
 interface UserSession {

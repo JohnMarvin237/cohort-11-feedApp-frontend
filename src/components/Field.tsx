@@ -1,4 +1,4 @@
-import React, { type JSX, type InputHTMLAttributes } from "react";
+import { type JSX, type InputHTMLAttributes } from "react";
 import { useField } from "formik";
 
 interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {

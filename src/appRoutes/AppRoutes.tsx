@@ -1,4 +1,4 @@
-import React, { type JSX } from "react";
+import { type JSX } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 
 import Login from "../pages/User/Login";
