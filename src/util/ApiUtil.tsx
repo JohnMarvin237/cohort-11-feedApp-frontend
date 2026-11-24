@@ -123,3 +123,34 @@ export const forgotPasswordApi = async (
     }
     return response;
 };
+
+export const resetPasswordApi = async (
+    token: string,
+    password: string,
+): Promise<StandardResponse> => {
+    let response: StandardResponse = frameResponse();
+
+    try {
+        const url: string = `${API_BASE_URL}/user/reset`;
+
+        const apiResponse = await axios.post(
+            url,
+            { password },
+            {
+                headers: {
+                    Authorization: frameToken(token),
+                },
+            },
+        );
+
+        if (apiResponse.status === 200) {
+            response = frameResponse(1);
+        }
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data.message);
+        }
+        console.error("Reset Password API Error:", err);
+    }
+    return response;
+};
