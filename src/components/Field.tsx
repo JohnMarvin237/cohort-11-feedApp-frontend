@@ -2,7 +2,7 @@ import { type JSX, type InputHTMLAttributes } from "react";
 import { useField } from "formik";
 
 interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  label: string;
+  label?: string;
   name: string;
 }
 
@@ -10,7 +10,7 @@ const Field = ({ label, ...props }: FieldProps): JSX.Element => {
     const [field, meta] = useField<string>(props);
     
     return <>
-        <label className="block mb-2 text-sm text-gray-600">{label}</label>
+        {label && <label className="block mb-2 text-sm text-gray-600">{label}</label>}
         <input
         {...field}
         {...props}
