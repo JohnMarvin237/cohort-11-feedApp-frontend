@@ -5,53 +5,74 @@ const API_BASE_URL: string = "http://localhost:8080";
 export const frameToken = (token: string): string => `Bearer ${token}`;
 
 export interface StandardResponse {
-  status: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payLoad: any; 
+    status: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    payLoad: any;
 }
 
 const frameResponse = (
-  reqStatus: number = 0,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  reqPayLoad: any = "Invalid request. Please try again later."
+    reqStatus: number = 0,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    reqPayLoad: any = "Invalid request. Please try again later.",
 ): StandardResponse => {
-  return {
-    status: reqStatus,
-    payLoad: reqPayLoad,
-  };
+    return {
+        status: reqStatus,
+        payLoad: reqPayLoad,
+    };
 };
 
 export const registerApi = async (
-  username: string,
-  password: string,
-  emailId: string,
-  firstName: string,
-  lastName: string,
-  phone: string
+    username: string,
+    password: string,
+    emailId: string,
+    firstName: string,
+    lastName: string,
+    phone: string,
 ): Promise<StandardResponse> => {
+    let response: StandardResponse = frameResponse();
 
-  let response: StandardResponse = frameResponse();
+    try {
+        const url: string = `${API_BASE_URL}/user/signup`;
+        const apiResponse = await axios.post(url, {
+            username,
+            password,
+            emailId,
+            firstName,
+            lastName,
+            phone,
+        });
 
-  try {
-  const url: string = `${API_BASE_URL}/user/signup`;
-  const apiResponse = await axios.post(url, {
-    username,
-    password,
-    emailId,
-    firstName,
-    lastName,
-    phone,
-  });
-
-  if (apiResponse.status === 200) {
-    response = frameResponse(1);
-  }
-} catch (err) {
-  if (axios.isAxiosError<{ message?: string}>(err) && err.response) {
-    response = frameResponse(0, err.response.data.message);
-  }
-  console.log(err);
-} 
-  return response;
+        if (apiResponse.status === 200) {
+            response = frameResponse(1);
+        }
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data.message);
+        }
+        console.log(err);
+    }
+    return response;
 };
 
+export const verifyEmailApi = async (
+    token: string,
+): Promise<StandardResponse> => {
+    let response: StandardResponse = frameResponse();
+
+    try {
+        const url: string = `${API_BASE_URL}/user/verify/email`;
+        const apiResponse = await axios.get(url, {
+            headers: { Authorization: frameToken(token) },
+        });
+
+        if (apiResponse.status === 200) {
+            response = frameResponse(1, apiResponse.data);
+        }
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data.message);
+        }
+        console.error("Email Verification Error:", err);
+    }
+    return response;
+};
