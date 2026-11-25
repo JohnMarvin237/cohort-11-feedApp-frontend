@@ -156,24 +156,59 @@ export const resetPasswordApi = async (
 };
 
 export const sessionApi = async (token: string): Promise<StandardResponse> => {
-   let response: StandardResponse = frameResponse();
-   try {
-   const url: string = `${API_BASE_URL}/user/get`;
-   
-   const apiResponse = await axios.get(url, {
-     headers: { 
-       Authorization: frameToken(token) 
-     },
-   });
+    let response: StandardResponse = frameResponse();
+    try {
+        const url: string = `${API_BASE_URL}/user/get`;
 
-   if (apiResponse.status === 200) {
-     response = frameResponse(1, apiResponse.data);
-   }
- } catch (err) {
-   if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
-     response = frameResponse(0, err.response.data.message);
-   }
-   console.error("Session Validation Error:", err);
- }
-   return response;
- };
+        const apiResponse = await axios.get(url, {
+            headers: {
+                Authorization: frameToken(token),
+            },
+        });
+
+        if (apiResponse.status === 200) {
+            response = frameResponse(1, apiResponse.data);
+        }
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data.message);
+        }
+        console.error("Session Validation Error:", err);
+    }
+    return response;
+};
+
+export const updatePublicProfileApi = async (
+    token: string,
+    bio: string,
+    city: string,
+    country: string,
+    headline: string,
+    picture: string,
+): Promise<StandardResponse> => {
+    let response: StandardResponse = frameResponse();
+
+    try {
+        const url: string = `${API_BASE_URL}/user/update/profile`;
+        const apiResponse = await axios.post(
+            url,
+            {
+                bio,
+                city,
+                country,
+                headline,
+                picture,
+            },
+            { headers: { Authorization: frameToken(token) } },
+        );
+        if (apiResponse.status === 200) {
+            response = frameResponse(1, apiResponse.data);
+        }
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data.message);
+        }
+        console.log(err);
+    }
+    return response;
+};
