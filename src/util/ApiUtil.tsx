@@ -212,3 +212,25 @@ export const updatePublicProfileApi = async (
     }
     return response;
 };
+
+export const getOthersFeedsApi = async (
+    token: string,
+    pageNumber: number,
+): Promise<StandardResponse> => {
+    let response: StandardResponse = frameResponse();
+    try {
+        const url: string = `${API_BASE_URL}/feeds/other/${pageNumber}/5`;
+        const apiResponse = await axios.get(url, {
+            headers: { Authorization: frameToken(token) },
+        });
+        if (apiResponse.status === 200) {
+            response = frameResponse(1, apiResponse.data);
+        }
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data.message);
+        }
+        console.log(err);
+    }
+    return response;
+};
