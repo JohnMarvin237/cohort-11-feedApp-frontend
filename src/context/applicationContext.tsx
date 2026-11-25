@@ -4,6 +4,7 @@ import { useCookies } from "react-cookie";
 interface UserSession {
     id: string;
     email: string;
+    profile?: Record<string, unknown> | null;
 }
 
 export interface AppContextType {
