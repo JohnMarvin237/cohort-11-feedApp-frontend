@@ -1,10 +1,20 @@
 import { createContext, useState , type JSX } from "react";
 import { useCookies } from "react-cookie";
 
+interface UserProfile {
+    bio?: string;
+    city?: string;
+    country?: string;
+    headline?: string;
+    picture?: string;
+}
+
 interface UserSession {
     id: string;
     email: string;
-    profile?: Record<string, unknown> | null;
+    firstName: string;
+    lastName: string;
+    profile?: UserProfile | null;
 }
 
 export interface AppContextType {

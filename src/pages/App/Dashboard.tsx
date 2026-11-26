@@ -2,6 +2,7 @@ import { useCallback, useEffect, useContext, useRef, useState, type JSX } from "
 import { AppContext } from "../../context/applicationContext";
 import LoadingIndicator from "../../components/LoadingIndicator";
 import { getOthersFeedsApi, type StandardResponse } from "../../util/ApiUtil";
+import MyProfile from "../../components/MyProfile";
 
 // A feed as returned by the backend: its fields will be detailed when FeedCard uses them
 type Feed = Record<string, unknown>;
@@ -55,6 +56,7 @@ const Dashboard = (): JSX.Element => {
   return (
     <main className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-12 mx-0 md:mx-12 container px-2 mx-auto">
       {/* {#MyProfile Component} */}
+      <MyProfile />
       <article>
         {/* {#AddFeed Component} */}
         {/* {#FeedCard Component} */}
