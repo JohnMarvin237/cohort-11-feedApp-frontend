@@ -118,3 +118,34 @@ export const resizeImageToFit = async (
 
     return result;
 };
+
+// The course sample data holds file names ("2.jpg") instead of images: only real images are shown
+export const isImageDataUrl = (value?: string | null): value is string =>
+    typeof value === "string" && value.startsWith("data:image/");
+
+// The backend sends dates as "yyyy-MM-dd HH:mm:ss" (application.yml). Safari cannot parse
+// the space, "yyyy-MM-ddTHH:mm:ss" works everywhere (read as local time)
+const toDate = (value: string | number | Date): Date => {
+    if (value instanceof Date) return value;
+    if (
+        typeof value === "string" &&
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(value)
+    ) {
+        return new Date(value.replace(" ", "T"));
+    }
+    return new Date(value);
+};
+
+const DATE_TIME_FORMAT = new Intl.DateTimeFormat("en-US", {
+    dateStyle: "long",
+    timeStyle: "short",
+});
+
+// e.g. "November 26, 2026 at 4:19 PM"; "" when the date is missing or invalid
+export const formatDateTime = (
+    value?: string | number | Date | null,
+): string => {
+    if (value === undefined || value === null || value === "") return "";
+    const date = toDate(value);
+    return Number.isNaN(date.getTime()) ? "" : DATE_TIME_FORMAT.format(date);
+};

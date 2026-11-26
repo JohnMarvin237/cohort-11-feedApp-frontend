@@ -6,14 +6,14 @@ import {
     useState,
     type JSX,
 } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 import { AppContext } from "../../context/applicationContext";
 import LoadingIndicator from "../../components/LoadingIndicator";
-import { getOthersFeedsApi, type StandardResponse } from "../../util/ApiUtil";
 import MyProfile from "../../components/MyProfile";
 import AddFeed from "../../components/AddFeed";
-
-// A feed as returned by the backend: its fields will be detailed when FeedCard uses them
-type Feed = Record<string, unknown>;
+import FeedCard from "../../components/FeedCard";
+import { getOthersFeedsApi, type StandardResponse } from "../../util/ApiUtil";
+import type { Feed } from "../../types/feed";
 
 const Dashboard = (): JSX.Element => {
     const appContext = useContext(AppContext);
@@ -23,6 +23,8 @@ const Dashboard = (): JSX.Element => {
     const [feedsData, setFeedsData] = useState<Feed[]>([]);
     const [pageNumber, setPageNumber] = useState<number>(0);
     const [hasMore, setHasMore] = useState<boolean>(true);
+    // Incremented on each reload of page 0: the FeedCards start again from the fresh server data
+    const [loadCount, setLoadCount] = useState<number>(0);
     const hasLoadedFirstPage = useRef<boolean>(false);
 
     const getOthersFeeds = useCallback(
@@ -34,8 +36,6 @@ const Dashboard = (): JSX.Element => {
                 loadPageNumber,
             );
 
-            console.log(apiResponse);
-
             if (apiResponse.status === 1) {
                 const newFeeds: Feed[] = apiResponse.payLoad.content;
 
@@ -45,6 +45,9 @@ const Dashboard = (): JSX.Element => {
                         ? newFeeds
                         : [...previousFeeds, ...newFeeds],
                 );
+                if (loadPageNumber === 0) {
+                    setLoadCount((count) => count + 1);
+                }
                 setPageNumber(loadPageNumber + 1);
                 setHasMore(loadPageNumber + 1 < apiResponse.payLoad.totalPages);
             }
@@ -67,18 +70,69 @@ const Dashboard = (): JSX.Element => {
     }
 
     return (
-        <main className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-12 md:mx-12 container px-2 mx-auto">
-            {/* {#MyProfile Component} */}
+        <main className="grid grid-cols-1 lg:grid-cols-2 gap-6 my-12 mx-0 md:mx-12 container px-2 mx-auto">
             <MyProfile />
             <article>
-                {/* {#AddFeed Component} */}
                 <AddFeed />
-                {/* {#FeedCard Component} */}
-                {/* Temporary check, until FeedCard and InfiniteScroll use this state */}
-                <p className="text-sm text-gray-500">
-                    {feedsData.length} feeds loaded (next page: {pageNumber},
-                    more: {hasMore ? "yes" : "no"})
-                </p>
+
+                <InfiniteScroll
+                    dataLength={feedsData.length}
+                    next={(): void => {
+                        getOthersFeeds(pageNumber);
+                    }}
+                    hasMore={hasMore}
+                    loader={
+                        <p className="text-center text-sm text-gray-500 my-4">
+                            Loading...
+                        </p>
+                    }
+                    endMessage={
+                        <p className="text-center my-4">
+                            <b>Yay! You have seen it all.</b>
+                        </p>
+                    }
+                    refreshFunction={(): void => {
+                        getOthersFeeds(0);
+                    }}
+                    pullDownToRefresh
+                    pullDownToRefreshThreshold={50}
+                    pullDownToRefreshContent={
+                        <h3 className="text-center">
+                            &#8595; Pull down to refresh
+                        </h3>
+                    }
+                    releaseToRefreshContent={
+                        <h3 className="text-center">
+                            &#8593; Release to refresh
+                        </h3>
+                    }
+                >
+                    <div className="mt-3">
+                        {feedsData.map(
+                            ({
+                                feedId,
+                                picture,
+                                content,
+                                createdOn,
+                                feedMetaData,
+                                user,
+                            }) => (
+                                <FeedCard
+                                    key={`${loadCount}-${feedId}`}
+                                    feedId={feedId}
+                                    picture={picture}
+                                    content={content}
+                                    createdOn={createdOn}
+                                    username={user.username}
+                                    firstName={user.firstName}
+                                    lastName={user.lastName}
+                                    profilePicture={user.profile?.picture}
+                                    feedMetaData={feedMetaData}
+                                />
+                            ),
+                        )}
+                    </div>
+                </InfiniteScroll>
             </article>
         </main>
     );
