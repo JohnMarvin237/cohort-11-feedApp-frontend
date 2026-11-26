@@ -9,7 +9,15 @@ import Button from "./Button";
 import ImageCropper from "./ImageCropper";
 import { updatePublicProfileApi, type StandardResponse } from "../util/ApiUtil";
 import { AppContext } from "../context/applicationContext";
-import { convertBase64 } from "../util/Helper";
+import {
+  ACCEPTED_IMAGE_TYPES,
+  MAX_PICTURE_LENGTH,
+  convertBase64,
+  validateImageFile,
+} from "../util/Helper";
+
+// Same lengths as the "Profile" columns in the database
+const MAX_TEXT_LENGTH = 100;
 
 interface UpdatePublicProfileProps {
   bio?: string;
@@ -29,11 +37,13 @@ interface UpdatePublicProfileFormValues {
 }
 
 const UpdateBasicProfileSchema = Yup.object().shape({
-  bio: Yup.string().required("Required"),
-  city: Yup.string().required("Required"),
-  country: Yup.string().required("Required"),
-  headline: Yup.string().required("Required"),
-  picture: Yup.string().required("Please upload a profile picture."),
+  bio: Yup.string().max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`).required("Required"),
+  city: Yup.string().max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`).required("Required"),
+  country: Yup.string().max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`).required("Required"),
+  headline: Yup.string().max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`).required("Required"),
+  picture: Yup.string()
+    .max(MAX_PICTURE_LENGTH, "This picture is too large. Please choose a smaller one.")
+    .required("Please upload a profile picture."),
 });
 
 const UpdatePublicProfile = ({
@@ -68,6 +78,12 @@ const UpdatePublicProfile = ({
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
       input.value = ""; // lets the user pick the same file again
+
+      // "accept" is only a hint for the file picker: always check the file itself
+      const fileError = validateImageFile(file);
+      formikRef.current?.setFieldValue("formMessage", fileError ?? undefined);
+      if (fileError) return;
+
       const base64 = await convertBase64(file);
       setUploadImageData(base64);
       setIsOpen(true);
@@ -149,7 +165,7 @@ const UpdatePublicProfile = ({
 
               <input
                 type="file"
-                accept="image/jpeg"
+                accept={ACCEPTED_IMAGE_TYPES.join(",")}
                 onChange={onSelectFile}
                 ref={imageSelectRef}
                 className="hidden"

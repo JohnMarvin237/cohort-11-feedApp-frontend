@@ -9,11 +9,16 @@ interface UserProfile {
     picture?: string;
 }
 
+// Same field names as the User entity's JSON (password is write-only, never sent)
 interface UserSession {
-    id: string;
-    email: string;
+    userId: number;
+    username: string;
     firstName: string;
     lastName: string;
+    emailId: string;
+    phone?: string;
+    emailVerified?: boolean;
+    createdOn?: string;
     profile?: UserProfile | null;
 }
 

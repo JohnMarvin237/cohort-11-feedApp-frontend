@@ -3,7 +3,9 @@ import Modal from "react-modal";
 import { Cropper, type CropperRef } from "react-advanced-cropper";
 import "react-advanced-cropper/dist/style.css";
 
-import { resizeImage } from "../util/Helper";
+import { canvasToCompressedDataUrl } from "../util/Helper";
+
+const MAX_PICTURE_SIZE = 500; // pixels
 
 interface ImageCropperProps {
   modalIsOpen: boolean;
@@ -33,11 +35,14 @@ const ImageCropper = ({
 }: ImageCropperProps): JSX.Element => {
   const cropperRef = useRef<CropperRef>(null);
 
-  const cropImage = async (): Promise<void> => {
-    const canvas = cropperRef.current?.getCanvas();
+  const cropImage = (): void => {
+    // The cropper resizes while cropping: one single compression, no PNG round trip
+    const canvas = cropperRef.current?.getCanvas({
+      maxWidth: MAX_PICTURE_SIZE,
+      maxHeight: MAX_PICTURE_SIZE,
+    });
     if (canvas) {
-      const resizedImage = await resizeImage(canvas.toDataURL());
-      setImageSrc(resizedImage);
+      setImageSrc(canvasToCompressedDataUrl(canvas));
       closeModal();
     }
   };
