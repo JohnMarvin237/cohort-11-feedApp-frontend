@@ -18,6 +18,7 @@ import {
 
 // Same lengths as the "Profile" columns in the database
 const MAX_TEXT_LENGTH = 100;
+const MAX_BIO_LENGTH = 500;
 
 interface UpdatePublicProfileProps {
   bio?: string;
@@ -37,7 +38,7 @@ interface UpdatePublicProfileFormValues {
 }
 
 const UpdateBasicProfileSchema = Yup.object().shape({
-  bio: Yup.string().max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`).required("Required"),
+  bio: Yup.string().max(MAX_BIO_LENGTH, `Maximum ${MAX_BIO_LENGTH} characters`).required("Required"),
   city: Yup.string().max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`).required("Required"),
   country: Yup.string().max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`).required("Required"),
   headline: Yup.string().max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`).required("Required"),
