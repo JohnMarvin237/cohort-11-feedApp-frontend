@@ -236,32 +236,60 @@ export const getOthersFeedsApi = async (
 };
 
 export const addFeedApi = async (
-  token: string,
-  content: string,
-  picture: string | null
+    token: string,
+    content: string,
+    picture: string | null,
 ): Promise<StandardResponse> => {
-  let response: StandardResponse = frameResponse();
+    let response: StandardResponse = frameResponse();
 
-  try {
-    const url: string = `${API_BASE_URL}/feeds`;
-    const apiResponse = await axios.post(
-      url,
-      {
-        content,
-        picture,
-      },
-      { headers: { Authorization: frameToken(token) } }
-    );
+    try {
+        const url: string = `${API_BASE_URL}/feeds`;
+        const apiResponse = await axios.post(
+            url,
+            {
+                content,
+                picture,
+            },
+            { headers: { Authorization: frameToken(token) } },
+        );
 
-    // The backend answers 201 Created. Axios already rejects non-2xx responses,
-    // so reaching this line means success. payLoad = the created feed.
-    response = frameResponse(1, apiResponse.data);
-  } catch (err) {
-    if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
-      response = frameResponse(0, err.response.data.message);
+        // The backend answers 201 Created. Axios already rejects non-2xx responses,
+        // so reaching this line means success. payLoad = the created feed.
+        response = frameResponse(1, apiResponse.data);
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data.message);
+        }
+        console.log(err);
     }
-    console.log(err);
-  }
 
-  return response;
+    return response;
+};
+
+export const addFeedMetaDataApi = async (
+    token: string,
+    feedId: string | number,
+    isLike: boolean | null,
+    comment: string | null,
+): Promise<StandardResponse> => {
+    let response: StandardResponse = frameResponse();
+    try {
+        const url: string = `${API_BASE_URL}/feeds/meta/${feedId}`;
+        const apiResponse = await axios.post(
+            url,
+            {
+                isLike,
+                comment,
+            },
+            { headers: { Authorization: frameToken(token) } },
+        );
+        response = frameResponse(1, apiResponse.data);
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data.message);
+        }
+        console.log(err);
+    }
+
+    return response;
 };
