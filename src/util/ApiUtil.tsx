@@ -234,3 +234,34 @@ export const getOthersFeedsApi = async (
     }
     return response;
 };
+
+export const addFeedApi = async (
+  token: string,
+  content: string,
+  picture: string | null
+): Promise<StandardResponse> => {
+  let response: StandardResponse = frameResponse();
+
+  try {
+    const url: string = `${API_BASE_URL}/feeds`;
+    const apiResponse = await axios.post(
+      url,
+      {
+        content,
+        picture,
+      },
+      { headers: { Authorization: frameToken(token) } }
+    );
+
+    // The backend answers 201 Created. Axios already rejects non-2xx responses,
+    // so reaching this line means success. payLoad = the created feed.
+    response = frameResponse(1, apiResponse.data);
+  } catch (err) {
+    if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+      response = frameResponse(0, err.response.data.message);
+    }
+    console.log(err);
+  }
+
+  return response;
+};
