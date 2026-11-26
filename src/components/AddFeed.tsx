@@ -20,12 +20,9 @@ import {
     validateImageFile,
 } from "../util/Helper";
 
-// Same limit as Feed.content on the backend (@Size(max = 300))
-const MAX_CONTENT_LENGTH = 300;
-
 interface AddFeedFormValues {
     content: string;
-    picture: string; // "" = no picture (the picture is optional)
+    picture: string; // "" until the user adds a picture
     formMessage?: string;
 }
 
@@ -35,18 +32,20 @@ const initialFormValues: AddFeedFormValues = {
     formMessage: "",
 };
 
+// Same rules as the "Feed" table of feedAppModel: content and picture are NOT NULL, no length limit.
+// MAX_PICTURE_LENGTH is not a database rule, only a safety cap on the request size
+// (resizeImageToFit always produces smaller pictures).
 const AddFeedSchema: Yup.ObjectSchema<{
     content: string;
-    picture: string | undefined;
+    picture: string;
 }> = Yup.object().shape({
-    content: Yup.string()
-        .trim()
-        .max(MAX_CONTENT_LENGTH, `Maximum ${MAX_CONTENT_LENGTH} characters`)
-        .required("Your feed cannot be empty."),
-    picture: Yup.string().max(
-        MAX_PICTURE_LENGTH,
-        "This picture is too large. Please choose a smaller one.",
-    ),
+    content: Yup.string().trim().required("Your feed cannot be empty."),
+    picture: Yup.string()
+        .max(
+            MAX_PICTURE_LENGTH,
+            "This picture is too large. Please choose a smaller one.",
+        )
+        .required("Please add a picture to your feed."),
 });
 
 const AddFeed = (): JSX.Element => {
@@ -112,7 +111,7 @@ const AddFeed = (): JSX.Element => {
         const apiResponse: StandardResponse = await addFeedApi(
             token,
             values.content.trim(),
-            values.picture || null,
+            values.picture,
         );
 
         if (apiResponse.status === 1) {
@@ -137,7 +136,7 @@ const AddFeed = (): JSX.Element => {
             validationSchema={AddFeedSchema}
             onSubmit={onFormSubmit}
         >
-            {({ values, errors, setFieldValue }) => (
+            {({ values, errors, touched, setFieldValue }) => (
                 <Form className="bg-white shadow rounded-lg mb-6 p-4">
                     {values.formMessage && (
                         <div>
@@ -173,7 +172,7 @@ const AddFeed = (): JSX.Element => {
                         aria-label="Feed content"
                     />
 
-                    {errors.picture && (
+                    {errors.picture && touched.picture && (
                         <p className="text-red-600 text-xs italic mt-1">
                             {errors.picture}
                         </p>

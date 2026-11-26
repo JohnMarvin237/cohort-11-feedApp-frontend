@@ -22,10 +22,6 @@ import {
     validateImageFile,
 } from "../util/Helper";
 
-// Same limits as Profile.java on the backend (@Size)
-const MAX_TEXT_LENGTH = 100;
-const MAX_BIO_LENGTH = 500; // Profile.bio is varchar(500) since the V3 migration
-
 interface UpdatePublicProfileProps {
     bio?: string;
     city?: string;
@@ -43,19 +39,14 @@ interface UpdatePublicProfileFormValues {
     formMessage?: string;
 }
 
+// Same rules as the "Profile" table of feedAppModel: headline and picture are NOT NULL,
+// bio, city and country are optional, and no text column has a length limit.
+// MAX_PICTURE_LENGTH is not a database rule, only a safety cap on the request size.
 const UpdateBasicProfileSchema = Yup.object().shape({
-    bio: Yup.string()
-        .max(MAX_BIO_LENGTH, `Maximum ${MAX_BIO_LENGTH} characters`)
-        .required("Required"),
-    city: Yup.string()
-        .max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`)
-        .required("Required"),
-    country: Yup.string()
-        .max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`)
-        .required("Required"),
-    headline: Yup.string()
-        .max(MAX_TEXT_LENGTH, `Maximum ${MAX_TEXT_LENGTH} characters`)
-        .required("Required"),
+    headline: Yup.string().trim().required("Required"),
+    bio: Yup.string(),
+    city: Yup.string(),
+    country: Yup.string(),
     picture: Yup.string()
         .max(
             MAX_PICTURE_LENGTH,
@@ -220,23 +211,21 @@ const UpdatePublicProfile = ({
                                     name="headline"
                                     id="headline"
                                     placeholder="Enter a headline"
-                                    maxCharacters={MAX_TEXT_LENGTH}
                                 />
                             </div>
 
                             <div>
                                 <BigTextField
-                                    label="Bio"
+                                    label="Bio (optional)"
                                     name="bio"
                                     id="bio"
                                     placeholder="Enter your bio"
-                                    maxCharacters={MAX_BIO_LENGTH}
                                 />
                             </div>
 
                             <div>
                                 <Field
-                                    label="City"
+                                    label="City (optional)"
                                     type="text"
                                     name="city"
                                     id="city"
@@ -246,7 +235,7 @@ const UpdatePublicProfile = ({
 
                             <div>
                                 <Field
-                                    label="Country"
+                                    label="Country (optional)"
                                     type="text"
                                     name="country"
                                     id="country"
