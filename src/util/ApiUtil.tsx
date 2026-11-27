@@ -298,7 +298,7 @@ export const getMyFeedsApi = async (
     token: string,
     pageNumber: number,
 ): Promise<StandardResponse> => {
-    let response = frameResponse();
+    let response: StandardResponse = frameResponse();
     try {
         const url: string = `${API_BASE_URL}/feeds/user/${pageNumber}/5`;
         const apiResponse = await axios.get(url, {
@@ -315,3 +315,42 @@ export const getMyFeedsApi = async (
     }
     return response;
 };
+
+ export const updateBasicProfileApi = async (
+   token: string,
+   password?: string,
+   emailId?: string,
+   firstName?: string,
+   lastName?: string,
+   phone?: string
+ ): Promise<StandardResponse> => {
+   let response: StandardResponse = frameResponse();
+   try {
+   const url: string = `${API_BASE_URL}/user/update`;
+   const apiResponse = await axios.post(
+     url,
+     {
+       password,
+       emailId,
+       firstName,
+       lastName,
+       phone,
+     },
+     { headers: { Authorization: frameToken(token) } }
+   );
+   if (apiResponse.status === 200) {
+     response = frameResponse(1, apiResponse.data);
+   }
+ } catch (err) {
+    if (axios.isAxiosError<{ message?: string }>(err)) {
+      if (err.response) {
+        response = frameResponse(0, err.response.data.message);
+      }
+      // Only the message: the full axios error holds the request body, password included
+      console.log(err.message);
+    } else {
+      console.log(err);
+    }
+  } 
+ return response;
+ };
