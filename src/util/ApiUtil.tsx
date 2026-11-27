@@ -316,41 +316,66 @@ export const getMyFeedsApi = async (
     return response;
 };
 
- export const updateBasicProfileApi = async (
-   token: string,
-   password?: string,
-   emailId?: string,
-   firstName?: string,
-   lastName?: string,
-   phone?: string
- ): Promise<StandardResponse> => {
-   let response: StandardResponse = frameResponse();
-   try {
-   const url: string = `${API_BASE_URL}/user/update`;
-   const apiResponse = await axios.post(
-     url,
-     {
-       password,
-       emailId,
-       firstName,
-       lastName,
-       phone,
-     },
-     { headers: { Authorization: frameToken(token) } }
-   );
-   if (apiResponse.status === 200) {
-     response = frameResponse(1, apiResponse.data);
-   }
- } catch (err) {
-    if (axios.isAxiosError<{ message?: string }>(err)) {
-      if (err.response) {
-        response = frameResponse(0, err.response.data.message);
-      }
-      // Only the message: the full axios error holds the request body, password included
-      console.log(err.message);
-    } else {
-      console.log(err);
+export const updateBasicProfileApi = async (
+    token: string,
+    password?: string,
+    emailId?: string,
+    firstName?: string,
+    lastName?: string,
+    phone?: string,
+): Promise<StandardResponse> => {
+    let response: StandardResponse = frameResponse();
+    try {
+        const url: string = `${API_BASE_URL}/user/update`;
+        const apiResponse = await axios.post(
+            url,
+            {
+                password,
+                emailId,
+                firstName,
+                lastName,
+                phone,
+            },
+            { headers: { Authorization: frameToken(token) } },
+        );
+        if (apiResponse.status === 200) {
+            response = frameResponse(1, apiResponse.data);
+        }
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err)) {
+            if (err.response) {
+                response = frameResponse(0, err.response.data.message);
+            }
+            // Only the message: the full axios error holds the request body, password included
+            console.log(err.message);
+        } else {
+            console.log(err);
+        }
     }
-  } 
- return response;
- };
+    return response;
+};
+
+export const deleteFeedApi = async (
+    token: string,
+    feedId: string | number,
+): Promise<StandardResponse> => {
+    let response: StandardResponse = frameResponse();
+
+    try {
+        const url: string = `${API_BASE_URL}/feeds/${feedId}`;
+        await axios.delete(url, {
+            headers: { Authorization: frameToken(token) },
+        });
+
+        // Any 2xx (200 OK or 204 No Content) means success: axios rejects the other codes
+        response = frameResponse(1);
+    } catch (err) {
+        if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
+            response = frameResponse(0, err.response.data?.message);
+        } else {
+            console.log(err);
+        }
+    }
+
+    return response;
+};
