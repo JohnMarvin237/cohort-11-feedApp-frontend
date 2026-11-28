@@ -450,79 +450,34 @@ export const getCommentSuggestionsApi = async (
     return response;
 };
 
-export const uploadAiAvatarApi = async (
+// AI avatar (Coding 2.52): the backend generates the image from the prompt AND saves it as the profile picture
+export const generateAiAvatarApi = async (
     token: string,
-    avatar: Blob,
+    prompt: string,
 ): Promise<StandardResponse> => {
     let response: StandardResponse = frameResponse();
 
     try {
-        const url: string = `${API_BASE_URL}/user/update/avatar`;
+        const url: string = `${API_BASE_URL}/profile/generate-avatar`;
+        const apiResponse = await axios.post<{
+            picture?: string;
+            remainingGenerations?: number;
+        }>(url, { prompt }, { headers: { Authorization: frameToken(token) } });
 
-        // A real file upload (multipart/form-data): axios sets the Content-Type and its boundary itself
-        const formData = new FormData();
-        formData.append("file", avatar, "ai-avatar");
-
-        const apiResponse = await axios.post(url, formData, {
-            headers: { Authorization: frameToken(token) },
-        });
-
-        // payLoad = the updated user, with the new profile picture
-        if (apiResponse.status === 200) {
+        // payLoad = { picture: "data:image/jpeg;base64,...", remainingGenerations: 4 }
+        if (apiResponse.status === 200 && apiResponse.data.picture) {
             response = frameResponse(1, apiResponse.data);
         }
     } catch (err) {
         if (axios.isAxiosError<{ message?: string }>(err) && err.response) {
-            response = frameResponse(0, err.response.data?.message);
+            // 400 = prompt refused by moderation, 429 = daily limit reached, 503 = the AI service failed
+            response = frameResponse(
+                0,
+                err.response.data?.message ??
+                    "The avatar could not be generated. Please try again later.",
+            );
         }
         console.log(err);
-    }
-
-    return response;
-};
-
-export const generateAiAvatarApi = async (
-    token: string,
-    description: string,
-    startingPhoto: Blob | null,
-): Promise<StandardResponse> => {
-    let response: StandardResponse = frameResponse();
-
-    try {
-        const url: string = `${API_BASE_URL}/user/avatar/generate`;
-
-        const formData = new FormData();
-        formData.append("description", description);
-        if (startingPhoto) {
-            formData.append("photo", startingPhoto, "starting-photo");
-        }
-
-        const apiResponse = await axios.post<{ picture?: string }>(
-            url,
-            formData,
-            {
-                headers: { Authorization: frameToken(token) },
-            },
-        );
-
-        // payLoad = the generated avatar ("data:image/jpeg;base64,..."): a preview, not saved yet
-        if (apiResponse.status === 200 && apiResponse.data.picture) {
-            response = frameResponse(1, apiResponse.data.picture);
-        }
-    } catch (err) {
-        if (axios.isAxiosError<{ message?: string }>(err)) {
-            if (err.response) {
-                // 400 = description refused or invalid photo, 503 = the AI service failed
-                response = frameResponse(
-                    0,
-                    err.response.data?.message ??
-                        "The avatar could not be generated. Please try again later.",
-                );
-            }
-            console.log(err.message);
-        } else {
-            console.log(err);
-        }
     }
 
     return response;

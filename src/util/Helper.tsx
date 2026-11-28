@@ -149,12 +149,3 @@ export const formatDateTime = (
     const date = toDate(value);
     return Number.isNaN(date.getTime()) ? "" : DATE_TIME_FORMAT.format(date);
 };
-
-// "data:image/webp;base64,..." -> Blob, to send the image as a real file (multipart upload)
-export const dataUrlToBlob = (dataUrl: string): Blob => {
-    const [header, data] = dataUrl.split(",");
-    const mimeType =
-        /^data:(.*?);base64$/.exec(header)?.[1] ?? "application/octet-stream";
-    const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0));
-    return new Blob([bytes], { type: mimeType });
-};

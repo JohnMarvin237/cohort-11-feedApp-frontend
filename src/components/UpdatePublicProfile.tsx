@@ -14,17 +14,12 @@ import BigTextField from "./BigTextField";
 import Button from "./Button";
 import ImageCropper from "./ImageCropper";
 import AiAvatarGenerator from "./AiAvatarGenerator";
-import {
-    updatePublicProfileApi,
-    uploadAiAvatarApi,
-    type StandardResponse,
-} from "../util/ApiUtil";
+import { updatePublicProfileApi, type StandardResponse } from "../util/ApiUtil";
 import { AppContext } from "../context/applicationContext";
 import {
     ACCEPTED_IMAGE_TYPES,
     MAX_PICTURE_LENGTH,
     convertBase64,
-    dataUrlToBlob,
     validateImageFile,
 } from "../util/Helper";
 
@@ -81,7 +76,8 @@ const UpdatePublicProfile = ({
     const appContext = useContext(AppContext);
     const token: string | null = appContext?.getSession() ?? null;
     // The AI avatar replaces the picture of an existing profile (not offered on Complete Profile)
-    const hasProfile: boolean = Boolean(appContext?.getUserData()?.profile);
+    const userData = appContext?.getUserData();
+    const hasProfile: boolean = Boolean(userData?.profile);
 
     // Called by ImageCropper with the cropped image: show it and store it in the form
     const onImageCropped = (croppedImage: string): void => {
@@ -116,31 +112,26 @@ const UpdatePublicProfile = ({
         }
     };
 
-    // Called by AiAvatarGenerator when the user chooses the generated avatar: saved right away.
-    // Returns an error message for the modal, or null when the avatar was saved.
-    const saveAiAvatar = async (avatar: string): Promise<string | null> => {
-        if (!token) return "Your session has expired. Please log in again.";
-
-        const apiResponse: StandardResponse = await uploadAiAvatarApi(
-            token,
-            dataUrlToBlob(avatar),
-        );
-        if (apiResponse.status !== 1) {
-            return (
-                apiResponse.payLoad ??
-                "The avatar could not be saved. Please try again."
-            );
+    // Called by AiAvatarGenerator: the backend has already saved the avatar as the profile picture
+    const onAvatarGenerated = (
+        avatar: string,
+        remainingGenerations: number,
+    ): void => {
+        // Context: NavBar, MyProfile and the feed cards show the new avatar right away
+        if (userData?.profile) {
+            appContext?.setUserData({
+                ...userData,
+                profile: { ...userData.profile, picture: avatar },
+            });
         }
-
-        const savedPicture: string =
-            apiResponse.payLoad?.profile?.picture ?? avatar;
-        appContext?.setUserData(apiResponse.payLoad);
         // Also in the form: a later "Save" must keep the new avatar, not send the old picture back
-        setImageSrc(savedPicture);
-        formikRef.current?.setFieldValue("picture", savedPicture);
-        formikRef.current?.setFieldValue("formMessage", "AI avatar saved.");
+        setImageSrc(avatar);
+        formikRef.current?.setFieldValue("picture", avatar);
+        formikRef.current?.setFieldValue(
+            "formMessage",
+            `AI avatar saved. ${remainingGenerations} generation${remainingGenerations === 1 ? "" : "s"} left today.`,
+        );
         setIsAvatarGeneratorOpen(false);
-        return null;
     };
 
     const onFormSubmit = async (
@@ -181,7 +172,7 @@ const UpdatePublicProfile = ({
             {isAvatarGeneratorOpen && (
                 <AiAvatarGenerator
                     closeModal={() => setIsAvatarGeneratorOpen(false)}
-                    onAvatarChosen={saveAiAvatar}
+                    onAvatarGenerated={onAvatarGenerated}
                 />
             )}
             {modalIsOpen && uploadImageData && (
@@ -250,8 +241,8 @@ const UpdatePublicProfile = ({
 
                             {hasProfile && (
                                 <p className="mt-2 text-xs text-gray-500 text-center">
-                                    Describe your avatar, add a photo if you
-                                    want, and let the AI draw it.
+                                    No photo you want to share? Describe a
+                                    persona and let the AI draw your avatar.
                                 </p>
                             )}
 
